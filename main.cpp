@@ -91,8 +91,6 @@ size_t SCPI_Write(scpi_t * context, const char * data, size_t len) {
 		int state = 1;
 		setsockopt(fd, IPPROTO_TCP, TCP_CORK, &state, sizeof(state));
 
-		fprintf(stderr, "SEND: %s\n", std::string(data, len).c_str());
-
 		return write(fd, data, len);
 	}
 
@@ -240,6 +238,8 @@ void on_process(void *userdata)
 					c += v;
 				else if (s.type == S_SQUARE)
 					c += v >= 0 ? 1 : -1;
+				else
+					error_exit(false, "Internal error: unknown wave type");
 			}
 
 			ad->offset++;
@@ -408,17 +408,23 @@ scpi_result_t SCPI_SourceApplyWave(scpi_t * context, const slot_type_t & type)
 
 	int32_t chnr = get_ch_nr(context);
 
-	double freq = 0;
-	if (!SCPI_ParamDouble(context, &freq, TRUE))
-		return SCPI_RES_ERR;
+	bool has_pars = true;
 
-	double amp = 0;
-	if (!SCPI_ParamDouble(context, &amp, TRUE))
-		return SCPI_RES_ERR;
+	double freq = 0, amp = 0, offset = 0;
+	if (!SCPI_ParamDouble(context, &freq, FALSE)) {
+		if (SCPI_ParamErrorOccurred(context))
+			return SCPI_RES_ERR;
 
-	double offset = 0;
-	if (!SCPI_ParamDouble(context, &offset, TRUE))
-		return SCPI_RES_ERR;
+		has_pars = false;
+	}
+
+	if (has_pars) {
+		if (!SCPI_ParamDouble(context, &amp, TRUE))
+			return SCPI_RES_ERR;
+
+		if (!SCPI_ParamDouble(context, &offset, TRUE))
+			return SCPI_RES_ERR;
+	}
 
 	// TODO: phase
 
@@ -426,9 +432,12 @@ scpi_result_t SCPI_SourceApplyWave(scpi_t * context, const slot_type_t & type)
 
 	grow_slots_vector(&adev->freqs, chnr);
 
-	adev->freqs.at(chnr).freq   = freq;
-	adev->freqs.at(chnr).amp    = amp;
-	adev->freqs.at(chnr).offset = offset;
+	if (has_pars) {
+		adev->freqs.at(chnr).freq   = freq;
+		adev->freqs.at(chnr).amp    = amp;
+		adev->freqs.at(chnr).offset = offset;
+	}
+
 	adev->freqs.at(chnr).type   = type;
 
 	adev->lock.unlock();
@@ -710,7 +719,7 @@ int main(int argc, char *argv[])
 					printf("Connection closed\r\n");
 					break;
 				} else {
-					printf("recv: %s\n", std::string(smbuffer, rc).c_str());
+					printf("recv: %s", std::string(smbuffer, rc).c_str());
 					SCPI_Input(&scpi_context, smbuffer, rc);
 				}
 			}

@@ -57,7 +57,7 @@ void dolog(const char *fmt, ...)
 		time_t t = now / 1000000;
 		struct tm *tm = localtime(&t);
 
-		fprintf(fh, "%02d:%02d:%02d.%06u] %s",
+		fprintf(fh, "%02d:%02d:%02d.%06lu] %s",
 				tm->tm_hour, tm->tm_min, tm->tm_sec,
 				now % 1000000,
 			       	buffer);

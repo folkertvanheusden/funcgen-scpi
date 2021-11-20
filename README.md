@@ -1,5 +1,8 @@
 # funcgen-scpi
-An SCPI-controlled function generator
+An simple SCPI-controlled function generator.
+Funcgen-scpi can generate sinus and square waves.
+It pretends to be and implements a tiny subset of a rigol device.
+It is somewhat compatible with SmuView.
 
 # building
 You need to be installed:

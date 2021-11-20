@@ -1,0 +1,3 @@
+[submodule "scpi-parser"]
+	path = scpi-parser
+	url = git@github.com:folkertvanheusden/scpi-parser.git

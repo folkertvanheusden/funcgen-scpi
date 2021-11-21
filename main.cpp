@@ -234,12 +234,10 @@ void on_process(void *userdata)
 
 				double rad = s.freq * ad->offset * base_mul;
 
-				double v = sin(rad) * s.amp + s.offset;
-
 				if (s.type == S_SIN)
-					c += v;
+					c += sin(rad) * s.amp + s.offset;
 				else if (s.type == S_SQUARE)
-					c += v >= 0 ? 1 : -1;
+					c += (sin(rad) * s.amp + s.offset) >= 0 ? 1 : -1;
 				else if (s.type == S_TRIANGLE)
 					c += asin(cos(rad)) / (M_PI / 2.0) * s.amp + s.offset;
 				else

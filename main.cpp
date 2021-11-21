@@ -242,7 +242,7 @@ void on_process(void *userdata)
 				else if (s.type == S_TRIANGLE)
 					c += asin(cos(rad)) / (M_PI / 2.0) * s.amp + s.offset;
 				else if (s.type == S_RAMP)
-					c += (1.0 - fmod(s.freq * ad->offset * base_muli, 1.0)) * s.amp + s.offset;
+					c += (1.0 - fmod(s.freq * ad->offset * base_muli, 1.0)) * 2.0 * s.amp + s.offset - 1.0;
 				else
 					error_exit(false, "Internal error: unknown wave type");
 			}

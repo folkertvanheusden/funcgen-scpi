@@ -11,7 +11,7 @@
 
 typedef enum { CM_AS_IS, CM_CLIP, CM_ATAN, CM_TANH, CM_DIV } clip_method_t;
 
-typedef enum { S_SIN = 0, S_SQUARE } slot_type_t;
+typedef enum { S_SIN = 0, S_SQUARE, S_TRIANGLE } slot_type_t;
 
 typedef struct {
 	double freq, amp, offset;

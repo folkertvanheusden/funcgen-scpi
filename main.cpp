@@ -232,12 +232,16 @@ void on_process(void *userdata)
 				if (!s.enabled)
 					continue;
 
-				double v = sin(s.freq * ad->offset * base_mul) * s.amp + s.offset;
+				double rad = s.freq * ad->offset * base_mul;
+
+				double v = sin(rad) * s.amp + s.offset;
 
 				if (s.type == S_SIN)
 					c += v;
 				else if (s.type == S_SQUARE)
 					c += v >= 0 ? 1 : -1;
+				else if (s.type == S_TRIANGLE)
+					c += asin(cos(rad)) / (M_PI / 2.0) * s.amp + s.offset;
 				else
 					error_exit(false, "Internal error: unknown wave type");
 			}
@@ -438,7 +442,7 @@ scpi_result_t SCPI_SourceApplyWave(scpi_t * context, const slot_type_t & type)
 		adev->freqs.at(chnr).offset = offset;
 	}
 
-	adev->freqs.at(chnr).type   = type;
+	adev->freqs.at(chnr).type = type;
 
 	adev->lock.unlock();
 
@@ -453,6 +457,11 @@ scpi_result_t SCPI_SourceApplySinusoid(scpi_t * context)
 scpi_result_t SCPI_SourceApplySquareWave(scpi_t * context)
 {
 	return SCPI_SourceApplyWave(context, S_SQUARE);
+}
+
+scpi_result_t SCPI_SourceApplyTriangleWave(scpi_t * context)
+{
+	return SCPI_SourceApplyWave(context, S_TRIANGLE);
 }
 
 scpi_result_t SCPI_OutputState(scpi_t * context)
@@ -508,7 +517,12 @@ static scpi_result_t SCPI_SourceQ(scpi_t * context)
 
 	grow_slots_vector(&adev->freqs, chnr);
 
-	SCPI_ResultMnemonic(context, "SIN");
+	if (adev->freqs.at(chnr).type == S_SIN)
+		SCPI_ResultMnemonic(context, "SIN");
+	else if (adev->freqs.at(chnr).type == S_SQUARE)
+		SCPI_ResultMnemonic(context, "SQUARE");
+	else if (adev->freqs.at(chnr).type == S_TRIANGLE)
+		SCPI_ResultMnemonic(context, "TRIANGLE");
 	SCPI_ResultDouble(context, adev->freqs.at(chnr).freq);
 	SCPI_ResultDouble(context, adev->freqs.at(chnr).amp);
 	SCPI_ResultDouble(context, adev->freqs.at(chnr).offset);
@@ -634,6 +648,7 @@ const scpi_command_t scpi_commands[] = {
 
 	{"SOURce#:APPLy:SINusoid", SCPI_SourceApplySinusoid, 0},
 	{"SOURce#:APPLy:SQUare", SCPI_SourceApplySquareWave, 0},
+	{"SOURce#:APPLy:TRIangle", SCPI_SourceApplyTriangleWave, 0},
 	{"OUTPut#[:STATe]", SCPI_OutputState, 0},
 	{"SOURce#:APPL?", SCPI_SourceQ, 0},
 	{"SOURce#:FREQuency", SCPI_SourceFreq, 0},

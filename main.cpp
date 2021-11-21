@@ -227,6 +227,7 @@ void on_process(void *userdata)
 
 			double c = 0;
 			const double base_mul = 2 * M_PI / ad->sample_rate;
+			const double base_muli = 1.0 / ad->sample_rate;
 
 			for(auto s : ad->freqs) {
 				if (!s.enabled)
@@ -240,6 +241,8 @@ void on_process(void *userdata)
 					c += (sin(rad) * s.amp + s.offset) >= 0 ? 1 : -1;
 				else if (s.type == S_TRIANGLE)
 					c += asin(cos(rad)) / (M_PI / 2.0) * s.amp + s.offset;
+				else if (s.type == S_RAMP)
+					c += (1.0 - fmod(s.freq * ad->offset * base_muli, 1.0)) * s.amp + s.offset;
 				else
 					error_exit(false, "Internal error: unknown wave type");
 			}
@@ -462,6 +465,11 @@ scpi_result_t SCPI_SourceApplyTriangleWave(scpi_t * context)
 	return SCPI_SourceApplyWave(context, S_TRIANGLE);
 }
 
+scpi_result_t SCPI_SourceApplyRampWave(scpi_t * context)
+{
+	return SCPI_SourceApplyWave(context, S_RAMP);
+}
+
 scpi_result_t SCPI_OutputState(scpi_t * context)
 {
 	fprintf(stderr, "SCPI_OutputState\n");
@@ -647,6 +655,7 @@ const scpi_command_t scpi_commands[] = {
 	{"SOURce#:APPLy:SINusoid", SCPI_SourceApplySinusoid, 0},
 	{"SOURce#:APPLy:SQUare", SCPI_SourceApplySquareWave, 0},
 	{"SOURce#:APPLy:TRIangle", SCPI_SourceApplyTriangleWave, 0},
+	{"SOURce#:APPLy:RAMp", SCPI_SourceApplyRampWave, 0},
 	{"OUTPut#[:STATe]", SCPI_OutputState, 0},
 	{"SOURce#:APPL?", SCPI_SourceQ, 0},
 	{"SOURce#:FREQuency", SCPI_SourceFreq, 0},
